@@ -12,10 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Resume file (PDF / DOCX / TXT) se plain text nikaalta hai,
- * taaki us text ko Hugging Face model ko bheja ja sake.
- */
+
 @Service
 public class ResumeParserService {
 

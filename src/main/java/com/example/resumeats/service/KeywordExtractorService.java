@@ -6,12 +6,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * Job description se important keywords (skills, tech terms) nikaalta hai
- * aur resume text ke against check karta hai ki kaunse present/missing hain.
- * Yeh rule-based hai (fast + free) — production me isse spaCy/NER ya
- * ek chhota Hugging Face NER model (e.g. "dslim/bert-base-NER") se replace kiya ja sakta hai.
- */
+
 @Service
 public class KeywordExtractorService {
 
