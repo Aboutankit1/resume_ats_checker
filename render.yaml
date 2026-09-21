@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: resume-ats
+    env: docker
+    plan: free
+    healthCheckPath: /api/ats/health
+    envVars:
+      - key: HF_API_KEY
+        sync: false

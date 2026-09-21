@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume ATS Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f4ef;
+    --paper-deep: #ebe9e1;
+    --rule: #dedad0;
+    --ink: #1c1d22;
+    --ink-soft: #5b5d64;
+    --navy: #22395c;
+    --navy-soft: #eef1f6;
+    --mark-yellow: #ffd35c;
+    --pen-red: #b8402f;
+    --pen-red-bg: #f6e2de;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 64px 24px 96px;
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--rule) 1px, transparent 1px);
+    background-size: 100% 42px;
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    display: flex;
+    justify-content: center;
+  }
+
+  main { width: 100%; max-width: 620px; }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.7rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+  }
+
+  .lede {
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 0 40px;
+  }
+
+  section { margin-bottom: 28px; }
+
+  label.field-label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  /* --- Upload dropzone --- */
+  .dropzone {
+    border: 1.5px dashed #b7b2a3;
+    border-radius: 3px;
+    padding: 22px 20px;
+    background: #fdfcf9;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .dropzone:hover, .dropzone.drag-over {
+    border-color: var(--navy);
+    background: var(--navy-soft);
+  }
+  .dropzone svg { flex-shrink: 0; color: var(--navy); }
+  .dropzone-text { font-size: 0.92rem; }
+  .dropzone-text strong { display: block; font-weight: 600; margin-bottom: 2px; }
+  .dropzone-text span { color: var(--ink-soft); font-size: 0.85rem; }
+  #resumeInput { display: none; }
+  .file-chosen {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--navy);
+    margin-top: 8px;
+    display: none;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 14px 16px;
+    border: 1.5px solid var(--rule);
+    border-radius: 3px;
+    background: #fdfcf9;
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    resize: vertical;
+  }
+  textarea:focus, .dropzone:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 1px;
+  }
+  textarea::placeholder { color: #a9a79c; }
+
+  button#submitBtn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 3px;
+    padding: 13px 26px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: transform 0.1s ease;
+  }
+  button#submitBtn:hover:not(:disabled) { transform: translateY(-1px); }
+  button#submitBtn:disabled { opacity: 0.55; cursor: progress; }
+
+  /* --- scanning motion, single orchestrated moment --- */
+  .scan-line {
+    position: relative;
+    height: 2px;
+    background: transparent;
+    overflow: hidden;
+    margin-top: 14px;
+    display: none;
+  }
+  .scan-line.active { display: block; }
+  .scan-line::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -30%;
+    width: 30%; height: 100%;
+    background: linear-gradient(90deg, transparent, var(--navy), transparent);
+    animation: sweep 1.1s linear infinite;
+  }
+  @keyframes sweep {
+    0% { left: -30%; }
+    100% { left: 100%; }
+  }
+
+  /* --- results --- */
+  #result { display: none; margin-top: 48px; padding-top: 32px; border-top: 1.5px solid var(--ink); }
+
+  .score-row { display: flex; align-items: center; gap: 22px; margin-bottom: 30px; }
+  .ring-wrap { position: relative; width: 92px; height: 92px; flex-shrink: 0; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-pct {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700; font-size: 1.15rem;
+  }
+  .verdict-text p { margin: 0; font-size: 1rem; line-height: 1.5; }
+  .verdict-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+
+  h3.section-heading {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+  }
+
+  /* matched: highlighter-marker effect */
+  .mark-flow { line-height: 2.4; font-size: 0.98rem; }
+  .mark-flow .hl {
+    position: relative;
+    padding: 1px 2px;
+    white-space: nowrap;
+  }
+  .mark-flow .hl::before {
+    content: '';
+    position: absolute;
+    left: -2px; right: -2px; top: 12%; bottom: 8%;
+    background: var(--mark-yellow);
+    transform: rotate(-0.6deg);
+    z-index: -1;
+    border-radius: 2px 6px 3px 5px;
+  }
+  .empty-note { color: var(--ink-soft); font-size: 0.92rem; font-style: italic; }
+
+  /* missing: red-pen chips */
+  .pen-chips { display: flex; flex-wrap: wrap; gap: 9px; }
+  .pen-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.83rem;
+    color: var(--pen-red);
+    background: var(--pen-red-bg);
+    border: 1px solid var(--pen-red);
+    border-radius: 2px;
+    padding: 4px 9px;
+  }
+
+  /* suggestions: margin notes */
+  .notes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .notes li {
+    position: relative;
+    padding-left: 20px;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+  .notes li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 7px;
+    width: 8px; height: 8px;
+    border: 1.5px solid var(--pen-red);
+    border-radius: 50%;
+  }
+
+  .error-box {
+    border: 1.5px solid var(--pen-red);
+    background: var(--pen-red-bg);
+    color: var(--pen-red);
+    padding: 14px 16px;
+    border-radius: 3px;
+    font-size: 0.92rem;
+    margin-top: 20px;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 40px 16px 80px; }
+    h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Resume ATS Checker</h1>
+  <p class="lede">See what an applicant tracking system reads in your resume before a hiring manager ever opens it.</p>
+
+  <form id="atsForm">
+    <section>
+      <label class="field-label" for="resumeInput">Resume</label>
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload resume">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6"/>
+          <path d="M9 15l2 2 4-4"/>
+        </svg>
+        <div class="dropzone-text">
+          <strong>Drop your resume here, or click to browse</strong>
+          <span>PDF, DOCX or TXT</span>
+        </div>
+      </div>
+      <input type="file" id="resumeInput" name="resume" accept=".pdf,.docx,.txt" required>
+      <div class="file-chosen" id="fileChosen"></div>
+    </section>
+
+    <section>
+      <label class="field-label" for="jd">Job description</label>
+      <textarea id="jd" name="jobDescription" placeholder="Paste the full job description here..." required></textarea>
+    </section>
+
+    <button type="submit" id="submitBtn">Analyze resume</button>
+    <div class="scan-line" id="scanLine"></div>
+  </form>
+
+  <div id="result"></div>
+</main>
+
+<script>
+const form = document.getElementById('atsForm');
+const resultDiv = document.getElementById('result');
+const btn = document.getElementById('submitBtn');
+const scanLine = document.getElementById('scanLine');
+const dropzone = document.getElementById('dropzone');
+const resumeInput = document.getElementById('resumeInput');
+const fileChosen = document.getElementById('fileChosen');
+
+dropzone.addEventListener('click', () => resumeInput.click());
+dropzone.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); resumeInput.click(); }
+});
+['dragenter', 'dragover'].forEach(evt =>
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); })
+);
+['dragleave', 'drop'].forEach(evt =>
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('drag-over'); })
+);
+dropzone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files.length) {
+    resumeInput.files = e.dataTransfer.files;
+    showFileName();
+  }
+});
+resumeInput.addEventListener('change', showFileName);
+
+function showFileName() {
+  if (resumeInput.files.length) {
+    fileChosen.textContent = '→ ' + resumeInput.files[0].name;
+    fileChosen.style.display = 'block';
+  }
+}
+
+function ringSvg(pct) {
+  const r = 40, c = 2 * Math.PI * r;
+  const offset = c - (pct / 100) * c;
+  const color = pct >= 70 ? '#22395c' : pct >= 45 ? '#b8402f' : '#b8402f';
+  return `
+    <svg width="92" height="92" viewBox="0 0 92 92">
+      <circle cx="46" cy="46" r="${r}" fill="none" stroke="#dedad0" stroke-width="7"/>
+      <circle cx="46" cy="46" r="${r}" fill="none" stroke="${color}" stroke-width="7"
+        stroke-dasharray="${c}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+    </svg>`;
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!resumeInput.files.length) { resumeInput.reportValidity?.(); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  scanLine.classList.add('active');
+  resultDiv.style.display = 'none';
+
+  const formData = new FormData();
+  formData.append('resume', resumeInput.files[0]);
+  formData.append('jobDescription', document.getElementById('jd').value);
+
+  try {
+    const res = await fetch('/api/ats/analyze', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.verdict || ('Request failed: ' + res.status));
+
+    const pct = data.matchScorePercent;
+    const matched = data.matchedKeywords || [];
+    const missing = data.missingKeywords || [];
+    const suggestions = data.suggestions || [];
+
+    resultDiv.innerHTML = `
+      <div class="score-row">
+        <div class="ring-wrap">
+          ${ringSvg(pct)}
+          <div class="ring-pct">${pct}%</div>
+        </div>
+        <div class="verdict-text">
+          <div class="verdict-label">match score</div>
+          <p>${escapeHtml(data.verdict)}</p>
+        </div>
+      </div>
+
+      <h3 class="section-heading">Found in your resume</h3>
+      <p class="mark-flow">
+        ${matched.length
+          ? matched.map(k => `<span class="hl">${escapeHtml(k)}</span>`).join('&nbsp;&nbsp;')
+          : '<span class="empty-note">No overlapping keywords detected.</span>'}
+      </p>
+
+      <h3 class="section-heading" style="margin-top:32px;">Missing from your resume</h3>
+      ${missing.length
+        ? `<div class="pen-chips">${missing.map(k => `<span class="pen-chip">+ ${escapeHtml(k)}</span>`).join('')}</div>`
+        : '<p class="empty-note">Nothing major missing — nice work.</p>'}
+
+      <h3 class="section-heading" style="margin-top:32px;">Notes</h3>
+      <ul class="notes">${suggestions.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
+    `;
+    resultDiv.style.display = 'block';
+  } catch (err) {
+    resultDiv.innerHTML = `<div class="error-box">${escapeHtml(err.message)}</div>`;
+    resultDiv.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Analyze resume';
+    scanLine.classList.remove('active');
+  }
+});
+</script>
+</body>
+</html>

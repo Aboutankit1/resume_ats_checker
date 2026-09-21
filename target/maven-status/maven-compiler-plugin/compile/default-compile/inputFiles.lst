@@ -1,0 +1,7 @@
+/Users/ankit/Downloads/resume-ats/src/main/java/com/example/resumeats/ResumeAtsApplication.java
+/Users/ankit/Downloads/resume-ats/src/main/java/com/example/resumeats/config/AppConfig.java
+/Users/ankit/Downloads/resume-ats/src/main/java/com/example/resumeats/controller/ResumeController.java
+/Users/ankit/Downloads/resume-ats/src/main/java/com/example/resumeats/dto/AtsResponse.java
+/Users/ankit/Downloads/resume-ats/src/main/java/com/example/resumeats/service/HuggingFaceService.java
+/Users/ankit/Downloads/resume-ats/src/main/java/com/example/resumeats/service/KeywordExtractorService.java
+/Users/ankit/Downloads/resume-ats/src/main/java/com/example/resumeats/service/ResumeParserService.java

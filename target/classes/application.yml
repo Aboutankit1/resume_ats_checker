@@ -1,0 +1,24 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+  application:
+    name: resume-ats
+
+huggingface:
+  api:
+    # IMPORTANT: token yahan hardcode MAT karein.
+    # Terminal me environment variable set karein, phir app run karein:
+    #   export HF_API_KEY=hf_your_token_here      (Mac/Linux)
+    #   $env:HF_API_KEY="hf_your_token_here"       (Windows PowerShell)
+    key: ${HF_API_KEY:}
+  model:
+    similarity: sentence-transformers/all-MiniLM-L6-v2
+
+logging:
+  level:
+    com.example.resumeats: INFO
