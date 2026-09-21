@@ -16,9 +16,10 @@ public class AppConfig {
     public WebClient huggingFaceWebClient() {
         if (hfApiKey == null || hfApiKey.isBlank()) {
             org.slf4j.LoggerFactory.getLogger(AppConfig.class).warn(
-                    "HF_API_KEY set nahi hai! /api/ats/analyze call karne par Hugging Face request fail hogi. "
-                            + "Env variable set karein: export HF_API_KEY=hf_xxxxx");
+                    "HF_API_KEY is not set! Hugging Face requests will fail when calling /api/ats/analyze. "
+                            + "Set the environment variable: export HF_API_KEY=hf_xxxxx");
         }
+
         return WebClient.builder()
                 .baseUrl("https://router.huggingface.co")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + hfApiKey)

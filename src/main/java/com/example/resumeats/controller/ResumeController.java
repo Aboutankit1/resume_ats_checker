@@ -28,10 +28,6 @@ public class ResumeController {
         this.keywordExtractorService = keywordExtractorService;
     }
 
-    /**
-     * Resume file (pdf/docx/txt) + job description text lekar
-     * ATS-style match score, matched/missing keywords aur suggestions return karta hai.
-     */
     @PostMapping(value = "/analyze", consumes = "multipart/form-data")
     public ResponseEntity<AtsResponse> analyze(
             @RequestParam("resume") MultipartFile resume,

@@ -7,13 +7,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Hugging Face Inference API ko call karta hai.
- * Model: sentence-transformers/all-MiniLM-L6-v2 (pipeline: sentence-similarity)
- * Yeh model job-description ko "source_sentence" aur resume-text ko "sentences" list
- * ke roop me lekar, seedha cosine-similarity score (0 to 1) return karta hai —
- * isliye humein khud embeddings compute / cosine similarity nikaalne ki zaroorat nahi.
- */
 @Service
 public class HuggingFaceService {
 
@@ -26,9 +19,6 @@ public class HuggingFaceService {
         this.webClient = huggingFaceWebClient;
     }
 
-    /**
-     * @return 0.0 se 1.0 ke beech semantic similarity score
-     */
     public double computeSimilarity(String jobDescription, String resumeText) {
         Map<String, Object> payload = Map.of(
                 "inputs", Map.of(
@@ -62,7 +52,6 @@ public class HuggingFaceService {
         }
     }
 
-    // HF free tier request size limit ke andar rehne ke liye text ko trim karte hain
     private String truncate(String text) {
         int maxChars = 2000;
         return text.length() > maxChars ? text.substring(0, maxChars) : text;
